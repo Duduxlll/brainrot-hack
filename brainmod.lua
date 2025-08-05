@@ -38,18 +38,30 @@ local function encontrarBase()
 end
 
 -- 🧠 ROUBAR
+-- 🧠 NOVA FUNÇÃO DE ROUBAR – força teleport com CFrame e atravessa parede
 local function roubarBrains()
-	local base = encontrarBase()
-	if not base then return end
-	local basePos = base:FindFirstChild("HumanoidRootPart") or base:FindFirstChildWhichIsA("BasePart")
-	if not basePos then return end
+    local base = encontrarBase()
+    if not base then return end
 
-	for _, brain in pairs(workspace:GetDescendants()) do
-		if brain:IsA("Model") and brain.Name:lower():find("brain") and brain:FindFirstChild("HumanoidRootPart") then
-			brain:MoveTo(basePos.Position + Vector3.new(0, 5, 0))
-		end
-	end
+    local basePos = base:FindFirstChild("HumanoidRootPart") or base:FindFirstChildWhichIsA("BasePart")
+    if not basePos then return end
+
+    for _, brain in pairs(workspace:GetDescendants()) do
+        if brain:IsA("Model") and brain.Name:lower():find("brain") then
+            -- tenta achar parte principal
+            local part = brain:FindFirstChild("HumanoidRootPart") or brain:FindFirstChildWhichIsA("BasePart")
+            if part then
+                -- força teleporte
+                if brain:FindFirstChildOfClass("Humanoid") then
+                    brain:SetPrimaryPartCFrame(CFrame.new(basePos.Position + Vector3.new(0, 5, 0)))
+                else
+                    part.CFrame = CFrame.new(basePos.Position + Vector3.new(math.random(-3, 3), 5, math.random(-3, 3)))
+                end
+            end
+        end
+    end
 end
+
 
 -- 🚀 AUTO-FARM
 local autoFarmAtivo = false
