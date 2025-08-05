@@ -1,76 +1,64 @@
--- ✅ FARMADOR DE BRAINS - Teleporta VOCÊ até cada Brainrot (funciona 100%)
+-- ✅ MOD MENU: atravessar parede + ir pra base | 100% Delta Mobile
 local lp = game.Players.LocalPlayer
+local cg = game:GetService("CoreGui")
 local char = lp.Character or lp.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
 local hrp = char:WaitForChild("HumanoidRootPart")
 
--- Criar GUI simples com botão FARMAR
-local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-local botao = Instance.new("TextButton", gui)
+-- GUI base
+local gui = Instance.new("ScreenGui", cg)
 
-botao.Size = UDim2.new(0, 180, 0, 50)
-botao.Position = UDim2.new(0, 15, 0, 300)
-botao.Text = "📍 FARMAR"
-botao.TextScaled = true
-botao.Font = Enum.Font.GothamBold
-botao.TextColor3 = Color3.new(1,1,1)
-botao.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
+-- Criador de botões
+local function criarBotao(texto, cor, posY, func)
+	local btn = Instance.new("TextButton", gui)
+	btn.Size = UDim2.new(0, 200, 0, 50)
+	btn.Position = UDim2.new(0, 15, 0, posY)
+	btn.BackgroundColor3 = cor
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true
+	btn.Text = texto
+	btn.MouseButton1Click:Connect(func)
+	return btn
+end
 
--- Função: encontrar todos os Brainrots válidos
-local function pegarBrains()
-	local lista = {}
+-- 🚪 Botão: Atravessar parede
+local noClip = false
+local function ativarNoClip()
+	noClip = not noClip
+	if noClip then
+		gui:FindFirstChild("noclipBtn").Text = "✅ ATRAVESSANDO"
+	else
+		gui:FindFirstChild("noclipBtn").Text = "🚪 ATRAVESSAR"
+	end
+end
+
+-- Ativar/desativar colisão em loop
+game:GetService("RunService").Stepped:Connect(function()
+	if noClip and lp.Character then
+		for _, part in pairs(lp.Character:GetDescendants()) do
+			if part:IsA("BasePart") and part.CanCollide == true then
+				part.CanCollide = false
+			end
+		end
+	end
+end)
+
+-- 🏠 Botão: Ir para base
+local function irParaBase()
 	for _, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("Model") and v.Name:lower():find("brain") and v:FindFirstChild("HumanoidRootPart") then
-			table.insert(lista, v)
+		if v:IsA("Model") and v:FindFirstChild("Owner") and v.Owner.Value == lp then
+			local part = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChildWhichIsA("BasePart")
+			if part then
+				lp.Character:MoveTo(part.Position + Vector3.new(0, 5, 0))
+				break
+			end
 		end
-	end
-	return lista
-end
-
--- Função: encontrar sua base
-local function encontrarBase()
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("Model") and obj:FindFirstChild("Owner") and obj.Owner.Value == lp then
-			return obj
-		end
-	end
-	return nil
-end
-
--- Função: teleportar personagem
-local function teleportarPara(pos)
-	if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-		lp.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
 	end
 end
 
--- Função: FARMAR
-local function iniciarFarm()
-	botao.Text = "⏳ FARMANDO..."
+-- Criar botões
+local b1 = criarBotao("🚪 ATRAVESSAR", Color3.fromRGB(255, 85, 0), 0.35, ativarNoClip)
+b1.Name = "noclipBtn"
 
-	local brains = pegarBrains()
-
-	for _, brain in pairs(brains) do
-		local part = brain:FindFirstChild("HumanoidRootPart")
-		if part then
-			teleportarPara(part.Position + Vector3.new(0, 3, 0))
-			wait(1.2) -- espera para o server registrar
-		end
-	end
-
-	-- Volta pra base
-	local base = encontrarBase()
-	if base then
-		local basePos = base:FindFirstChild("HumanoidRootPart") or base:FindFirstChildWhichIsA("BasePart")
-		if basePos then
-			teleportarPara(basePos.Position + Vector3.new(0, 5, 0))
-		end
-	end
-
-	botao.Text = "✅ FINALIZADO"
-	wait(2)
-	botao.Text = "📍 FARMAR"
-end
-
--- Conecta botão
-botao.MouseButton1Click:Connect(iniciarFarm)
-
+local b2 = criarBotao("🏠 IR PARA BASE", Color3.fromRGB(0, 170, 0), 0.45, irParaBase)
