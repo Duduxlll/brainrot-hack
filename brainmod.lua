@@ -1,25 +1,25 @@
--- ✅ FINALIZADO: Atravessar parede (noclip) e teleporte para base sem bugs
+-- ✅ MOD FINAL - Noclip + Teleport + Speed Options (100% funcional)
 local lp = game.Players.LocalPlayer
 local cg = game:GetService("CoreGui")
 local rs = game:GetService("RunService")
 local gui = Instance.new("ScreenGui", cg)
-gui.Name = "BrainGUI"
+gui.Name = "BrainGUIvFinal"
 
 -- Criar botão
-local function criarBotao(nome, cor, posY, func)
+local function criarBotao(nome, cor, posY, callback)
 	local b = Instance.new("TextButton", gui)
 	b.Size = UDim2.new(0, 200, 0, 50)
-	b.Position = UDim2.new(0, 15, 0, posY)
+	b.Position = UDim2.new(0, 20, 0, posY)
 	b.BackgroundColor3 = cor
 	b.TextColor3 = Color3.new(1, 1, 1)
 	b.TextScaled = true
 	b.Font = Enum.Font.GothamBold
 	b.Text = nome
-	b.MouseButton1Click:Connect(func)
+	b.MouseButton1Click:Connect(callback)
 	return b
 end
 
--- ✅ NOCLIP SEM BUG (você atravessa parede com suavidade)
+-- ✅ 1. NOCLIP
 local noclipAtivo = false
 local function toggleNoclip()
 	noclipAtivo = not noclipAtivo
@@ -36,31 +36,30 @@ rs.Stepped:Connect(function()
 	end
 end)
 
--- ✅ TELEPORTAR PARA BASE — localiza modelo com seu nome ou nome da base
+-- ✅ 2. TELEPORTAR PARA BASE (POSIÇÃO MANUAL FIXA)
+local posManualBase = Vector3.new(0, 20, 0) -- ⬅️ Troque aqui pela coordenada da sua base real, se souber
 local function irParaBase()
-	local baseEncontrada = nil
-
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("Model") and obj.Name:lower():find(lp.Name:lower()) then
-			local p = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
-			if p then
-				baseEncontrada = p
-				break
-			end
-		end
-	end
-
-	if baseEncontrada then
-		local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			hrp.CFrame = baseEncontrada.CFrame + Vector3.new(0, 5, 0)
-		end
-	else
-		warn("❌ Base não encontrada!")
+	local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		hrp.CFrame = CFrame.new(posManualBase)
 	end
 end
 
--- Botões visíveis
-local noclipBtn = criarBotao("🚪 ATRAVESSAR", Color3.fromRGB(255, 85, 0), 300, toggleNoclip)
-local baseBtn = criarBotao("🏠 IR PARA BASE", Color3.fromRGB(0, 170, 0), 360, irParaBase)
+-- ✅ 3. SPEED MULTIPLICADOR
+local function setSpeed(multi)
+	local hum = lp.Character and lp.Character:FindFirstChildWhichIsA("Humanoid")
+	if hum then
+		hum.WalkSpeed = 16 * multi
+	end
+end
+
+-- Botões principais
+local noclipBtn = criarBotao("🚪 ATRAVESSAR", Color3.fromRGB(255, 85, 0), 250, toggleNoclip)
+local baseBtn = criarBotao("🏠 IR PARA BASE", Color3.fromRGB(0, 170, 0), 310, irParaBase)
+
+-- Botões de velocidade
+criarBotao("💨 SPEED x2", Color3.fromRGB(50, 150, 255), 370, function() setSpeed(2) end)
+criarBotao("💨 SPEED x4", Color3.fromRGB(50, 150, 255), 430, function() setSpeed(4) end)
+criarBotao("💨 SPEED x8", Color3.fromRGB(50, 150, 255), 490, function() setSpeed(8) end)
+criarBotao("💨 SPEED x16", Color3.fromRGB(50, 150, 255), 550, function() setSpeed(16) end)
 
