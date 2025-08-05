@@ -1,64 +1,57 @@
--- ✅ MOD MENU: atravessar parede + ir pra base | 100% Delta Mobile
+-- ✅ CORRIGIDO: GUI com atravessar parede + ir pra base
 local lp = game.Players.LocalPlayer
 local cg = game:GetService("CoreGui")
-local char = lp.Character or lp.CharacterAdded:Wait()
-local humanoid = char:WaitForChild("Humanoid")
-local hrp = char:WaitForChild("HumanoidRootPart")
+local rs = game:GetService("RunService")
 
--- GUI base
+-- Criar GUI base
 local gui = Instance.new("ScreenGui", cg)
+gui.Name = "BrainHackGUI"
 
 -- Criador de botões
-local function criarBotao(texto, cor, posY, func)
-	local btn = Instance.new("TextButton", gui)
-	btn.Size = UDim2.new(0, 200, 0, 50)
-	btn.Position = UDim2.new(0, 15, 0, posY)
-	btn.BackgroundColor3 = cor
-	btn.TextColor3 = Color3.new(1, 1, 1)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true
-	btn.Text = texto
-	btn.MouseButton1Click:Connect(func)
-	return btn
+local function criarBotao(texto, cor, posY, callback)
+	local botao = Instance.new("TextButton")
+	botao.Size = UDim2.new(0, 200, 0, 50)
+	botao.Position = UDim2.new(0, 15, 0, posY)
+	botao.BackgroundColor3 = cor
+	botao.TextColor3 = Color3.new(1, 1, 1)
+	botao.TextScaled = true
+	botao.Font = Enum.Font.GothamBold
+	botao.Text = texto
+	botao.Parent = gui
+	botao.MouseButton1Click:Connect(callback)
+	return botao
 end
 
--- 🚪 Botão: Atravessar parede
-local noClip = false
-local function ativarNoClip()
-	noClip = not noClip
-	if noClip then
-		gui:FindFirstChild("noclipBtn").Text = "✅ ATRAVESSANDO"
-	else
-		gui:FindFirstChild("noclipBtn").Text = "🚪 ATRAVESSAR"
-	end
+-- 🟠 ATRAVESSAR PAREDE (noclip)
+local noclipAtivo = false
+local function toggleNoclip()
+	noclipAtivo = not noclipAtivo
+	noclipBotao.Text = noclipAtivo and "✅ ATRAVESSANDO" or "🚪 ATRAVESSAR"
 end
 
--- Ativar/desativar colisão em loop
-game:GetService("RunService").Stepped:Connect(function()
-	if noClip and lp.Character then
+rs.Stepped:Connect(function()
+	if noclipAtivo and lp.Character then
 		for _, part in pairs(lp.Character:GetDescendants()) do
-			if part:IsA("BasePart") and part.CanCollide == true then
+			if part:IsA("BasePart") then
 				part.CanCollide = false
 			end
 		end
 	end
 end)
 
--- 🏠 Botão: Ir para base
+-- 🟢 IR PARA BASE
 local function irParaBase()
-	for _, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("Model") and v:FindFirstChild("Owner") and v.Owner.Value == lp then
-			local part = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChildWhichIsA("BasePart")
-			if part then
-				lp.Character:MoveTo(part.Position + Vector3.new(0, 5, 0))
-				break
+	for _, model in pairs(workspace:GetDescendants()) do
+		if model:IsA("Model") and model:FindFirstChild("Owner") and model.Owner.Value == lp then
+			local pos = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChildWhichIsA("BasePart")
+			if pos then
+				lp.Character:WaitForChild("HumanoidRootPart").CFrame = pos.CFrame + Vector3.new(0, 5, 0)
+				return
 			end
 		end
 	end
 end
 
 -- Criar botões
-local b1 = criarBotao("🚪 ATRAVESSAR", Color3.fromRGB(255, 85, 0), 0.35, ativarNoClip)
-b1.Name = "noclipBtn"
-
-local b2 = criarBotao("🏠 IR PARA BASE", Color3.fromRGB(0, 170, 0), 0.45, irParaBase)
+local noclipBotao = criarBotao("🚪 ATRAVESSAR", Color3.fromRGB(255, 85, 0), 300, toggleNoclip)
+local baseBotao = criarBotao("🏠 IR PARA BASE", Color3.fromRGB(0, 170, 0), 360, irParaBase)
